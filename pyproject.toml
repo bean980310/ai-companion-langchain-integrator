@@ -1,0 +1,29 @@
+[project]
+name = "ai-companion-langchain-integrator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+   "langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai, mistralai]>=1.0.0",
+   "langchain-mcp-adapters>=0.1.14",
+   "langchain-classic",
+   "langchain_chroma",
+   "torch",
+   "peft",
+   "unstructured[all-docs]"
+]
+
+[project.optional-dependencies]
+mlx = [
+    "mlx",
+    "mlx-lm",
+    "mlx-vlm"
+]
+
+llama_cpp = [
+    "llama-cpp-python"
+]
+
+[tool.uv.sources]
+mlx-vlm = { git = "https://github.com/bean980310/mlx-vlm.git", rev = "45a2ed7e09d642a7a53b88e0072af5119f633338" }
