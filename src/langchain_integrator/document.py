@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Optional
 
-from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain_unstructured import UnstructuredLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
 
 class DocumentLoader:
@@ -33,8 +33,8 @@ class DocumentLoader:
 
     @staticmethod
     def from_file_path(file_path: str | Path | list[str] | list[Path]):
-        return UnstructuredFileLoader(file_path=file_path)
+        return UnstructuredLoader(file_path=file_path)
 
     @staticmethod
     def from_web_url(web_url: str):
-        return UnstructuredFileLoader(web_url=web_url)
+        return UnstructuredLoader(web_url=web_url)

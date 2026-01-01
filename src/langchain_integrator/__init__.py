@@ -53,7 +53,7 @@ from langchain_community.document_loaders import RecursiveUrlLoader
 from langchain_community.document_loaders import PyPDFLoader, PyMuPDFLoader, PDFPlumberLoader
 from langchain_community.document_loaders import CSVLoader, UnstructuredCSVLoader
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain_unstructured import UnstructuredLoader
 # Back‑end specific chat/LLM wrappers
 from langchain_community.llms.llamacpp import LlamaCpp
 from langchain_community.chat_models.llamacpp import ChatLlamaCpp
@@ -392,7 +392,7 @@ class LangchainIntegrator:
 
     @staticmethod
     def process_doc(src: str | Path | List[str] | List[Path]):
-        loader = UnstructuredFileLoader(src)
+        loader = UnstructuredLoader(src)
 
         docs = loader.load()
         splitter = RecursiveCharacterTextSplitter(chunk_size=2048, chunk_overlap=200)
