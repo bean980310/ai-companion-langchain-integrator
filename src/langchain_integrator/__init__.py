@@ -274,6 +274,20 @@ class LangchainIntegrator:
                 repeat_penalty=self.repetition_penalty,
                 verbose=self.verbose,
                 )
+        elif provider == "lmstudio":
+            return ChatOpenAI(
+                model=self.model_name,
+                temperature=self.temperature,
+                api_key=self.api_key,
+                base_url="http://localhost:1234/v1",
+                max_tokens=self.max_tokens,
+                top_p=self.top_p,
+                model_kwargs={
+                    "top_k": self.top_k,
+                    "repetition_penalty": self.repetition_penalty,
+                },
+                verbose=self.verbose,
+            )
         else:
             if provider == ("self-provided", "transformers"):
                 # Uses HuggingFace Inference Endpoint or Hub inference API
