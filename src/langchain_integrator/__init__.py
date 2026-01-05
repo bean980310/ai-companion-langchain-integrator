@@ -243,7 +243,7 @@ class LangchainIntegrator:
                 base_url="https://openrouter.ai/api/v1",
                 max_tokens=self.max_tokens,
                 top_p=self.top_p,
-                model_kwargs={
+                extra_body={
                     "top_k": self.top_k,
                     "repetition_penalty": self.repetition_penalty,
 
@@ -282,7 +282,7 @@ class LangchainIntegrator:
                 base_url="http://localhost:1234/v1",
                 max_tokens=self.max_tokens,
                 top_p=self.top_p,
-                model_kwargs={
+                extra_body={
                     "top_k": self.top_k,
                     "repetition_penalty": self.repetition_penalty,
                 },
@@ -377,16 +377,46 @@ class LangchainIntegrator:
 
         return response.strip()
     
+    def _extract_text_content(self, content):
+        """content에서 텍스트만 추출. 리스트 형태이면 text 타입의 내용을 결합."""
+        if isinstance(content, str):
+            return content
+
+        elif isinstance(content, list):
+            texts = []
+            for item in content:
+                if isinstance(item, dict):
+                    if item.get("type") == "text":
+                        texts.append(item.get("text", ""))
+                    elif "text" in item:
+                        texts.append(item.get("text", ""))
+                elif isinstance(item, str):
+                    texts.append(item)
+            return " ".join(texts)
+        return str(content)
+
     def load_template_with_langchain(self, messages):
         self.chat_history = ChatMessageHistory()
+        # system_prompt = next((msg['content'] for msg in messages[:1] if msg['role'] == 'system'), None)
+        system_message = None
+
         for msg in messages[:-1]:
             if msg["role"] == "system":
-                system_message = SystemMessage(content=msg["content"])
+                content = self._extract_text_content(msg["content"])
+                system_message = SystemMessage(content=content)
+
             if msg["role"] == "user":
-                self.chat_history.add_user_message(msg["content"])
+                content = self._extract_text_content(msg["content"])
+                self.chat_history.add_user_message(content)
+
             if msg["role"] == "assistant":
-                self.chat_history.add_ai_message(msg["content"])
-        self.user_message = HumanMessage(content=messages[-1]["content"])
+                content = self._extract_text_content(msg["content"])
+                self.chat_history.add_ai_message(content)
+
+        last_content = self._extract_text_content(messages[-1]["content"])
+
+        self.user_message = HumanMessage(content=last_content)
+
         # logger.info(len(self.chat_history.messages))
         if not self.chat_history.messages:
             self.prompt = ChatPromptTemplate.from_messages(
