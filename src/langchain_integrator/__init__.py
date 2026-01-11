@@ -56,6 +56,10 @@ from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_unstructured import UnstructuredLoader
 # Back‑end specific chat/LLM wrappers
 from langchain_community.llms.llamacpp import LlamaCpp
+try:
+    from langchain_vllm.llms import VLLM
+except ImportError:
+    warnings.warn("vllm is not installed. Please install it to use VLLM features.", UserWarning)
 from langchain_community.chat_models.llamacpp import ChatLlamaCpp
 from langchain_huggingface import HuggingFacePipeline, HuggingFaceEndpoint, ChatHuggingFace
 from langchain_openai import ChatOpenAI
@@ -91,8 +95,8 @@ class LangchainIntegrator:
         Parameters
         ----------
         provider : str | tuple[str, str]
-            One of: ``(self-provided, transformers)`` | ``(self-provided, gguf)`` | ``(self-provided, mlx)`` | ``openai`` |
-            ``anthropic`` | ``google-genai`` | ``perplexity`` | ``xai`` | ``mistralai`` | ``openrouter`` | ``hf-inference`` | ``lmstudio`` | ``ollama`` .
+            One of: ``(self-provided, transformers)`` | ``(self-provided, gguf)`` | ``(self-provided, mlx)`` | ``(self-provided, vllm-local)`` | ``openai`` |
+            ``anthropic`` | ``google-genai`` | ``perplexity`` | ``xai`` | ``mistralai`` | ``openrouter`` | ``hf-inference`` | ``lmstudio`` | ``ollama`` | ``vllm-api`` .
         model_name : str
             HF repo id, local model file, or provider‑specific model id.
         lora_model_name : str
@@ -288,6 +292,20 @@ class LangchainIntegrator:
                 },
                 verbose=self.verbose,
             )
+        elif provider == 'vllm-api':
+            return ChatOpenAI(
+                model=self.model_name,
+                temperature=self.temperature,
+                api_key=self.api_key,
+                base_url="http://localhost:8000",
+                max_tokens=self.max_tokens,
+                top_p=self.top_p,
+                extra_body={
+                    "top_k": self.top_k,
+                    "repetition_penalty": self.repetition_penalty,
+                },
+                verbose=self.verbose,
+            )
         else:
             if provider == ("self-provided", "transformers"):
                 # Uses HuggingFace Inference Endpoint or Hub inference API
@@ -295,7 +313,16 @@ class LangchainIntegrator:
                 pipe = pipeline(model=self.model, tokenizer=self.tokenizer, task="text-generation")
                 llm = HuggingFacePipeline(pipeline=pipe, pipeline_kwargs=pipeline_kwargs, verbose=self.verbose)
                 return ChatHuggingFace(llm=llm, verbose=self.verbose, max_tokens=self.max_tokens, model_kwargs={})
-            
+            elif provider == ('self-provided', 'vllm-local'):
+                return VLLM(
+                    model=self.model,
+                    max_new_tokens=self.max_tokens,
+                    temperature=self.temperature,
+                    top_p=self.top_p,
+                    top_k=self.top_k,
+                    repetition_penalty=self.repetition_penalty,
+                    verbose=self.verbose,
+                )
             elif provider == ("self-provided", "gguf"):
                 # Local GGUF (llama.cpp) model
                 return ChatLlamaCpp(
