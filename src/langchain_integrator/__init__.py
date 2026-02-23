@@ -255,11 +255,14 @@ class LangchainIntegrator:
                 verbose=self.verbose,
             )
         elif provider == "hf-inference":
+            hf_model_name = self.model_name.split(":")[0]
+            hf_provider = self.model_name.split(":")[1] if self.model_name.split(":")[1] != "cheapest" or "fastest" else "auto"
+            
             llm=HuggingFaceEndpoint(
-                repo_id=self.model_name,
+                repo_id=hf_model_name,
                 temperature=self.temperature,
                 huggingfacehub_api_token=self.api_key,
-                provider=str(kwargs.get("hf_provider", "auto")),
+                provider = hf_provider,
                 max_new_tokens=self.max_tokens,
                 top_p=self.top_p,
                 top_k=self.top_k,
