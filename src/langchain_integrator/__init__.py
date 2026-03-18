@@ -25,7 +25,7 @@ except ImportError:
 
 from transformers import pipeline, PreTrainedModel, GenerationMixin, AutoModel, AutoModelForCausalLM, AutoModelForImageTextToText
 from transformers import AutoProcessor, ProcessorMixin
-from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase
+from transformers import AutoTokenizer, PreTrainedTokenizerBase, TokenizersBackend, PythonBackend
 from peft import PeftModel
 from llama_cpp import Llama
 
@@ -90,7 +90,7 @@ except ImportError:
         pass
 
 class LangchainIntegrator:
-    def __init__(self, provider: str | tuple[str, str], model_name: str = None, lora_model_name: str = None, model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None, tokenizer: AutoTokenizer | PreTrainedTokenizer | PreTrainedTokenizerFast | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None, processor: AutoProcessor | ProcessorMixin | Any | None = None, enable_thinking : bool = False, **kwargs):
+    def __init__(self, provider: str | tuple[str, str], model_name: str = None, lora_model_name: str = None, model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None, tokenizer: AutoTokenizer | PythonBackend | TokenizersBackend | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None, processor: AutoProcessor | ProcessorMixin | Any | None = None, enable_thinking : bool = False, **kwargs):
         """
         Parameters
         ----------
