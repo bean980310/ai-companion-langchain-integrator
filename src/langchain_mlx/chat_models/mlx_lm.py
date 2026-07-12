@@ -36,7 +36,7 @@ from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
-from langchain_mlx.llms.mlx_pipeline import MLXPipeline
+from langchain_mlx.llms.mlx_lm import MLXPipeline
 
 DEFAULT_SYSTEM_PROMPT = """You are a helpful, respectful, and honest assistant."""
 
@@ -77,9 +77,7 @@ class ChatMLX(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         llm_input = self._to_chat_prompt(messages)
-        llm_result = self.llm._generate(
-            prompts=[llm_input], stop=stop, run_manager=run_manager, **kwargs
-        )
+        llm_result = self.llm._generate(prompts=[llm_input], stop=stop, run_manager=run_manager, **kwargs)
         return self._to_chat_result(llm_result)
 
     async def _agenerate(
@@ -90,9 +88,7 @@ class ChatMLX(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         llm_input = self._to_chat_prompt(messages)
-        llm_result = await self.llm._agenerate(
-            prompts=[llm_input], stop=stop, run_manager=run_manager, **kwargs
-        )
+        llm_result = await self.llm._agenerate(prompts=[llm_input], stop=stop, run_manager=run_manager, **kwargs)
         return self._to_chat_result(llm_result)
 
     def _to_chat_prompt(
@@ -135,14 +131,10 @@ class ChatMLX(BaseChatModel):
         chat_generations = []
 
         for g in llm_result.generations[0]:
-            chat_generation = ChatGeneration(
-                message=AIMessage(content=g.text), generation_info=g.generation_info
-            )
+            chat_generation = ChatGeneration(message=AIMessage(content=g.text), generation_info=g.generation_info)
             chat_generations.append(chat_generation)
 
-        return ChatResult(
-            generations=chat_generations, llm_output=llm_result.llm_output
-        )
+        return ChatResult(generations=chat_generations, llm_output=llm_result.llm_output)
 
     @property
     def _llm_type(self) -> str:
@@ -155,28 +147,18 @@ class ChatMLX(BaseChatModel):
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
-        import mlx.core as mx
-        from mlx_lm.generate import generate_step
-
         try:
             import mlx.core as mx
             from mlx_lm.sample_utils import make_logits_processors, make_sampler
             from mlx_lm.generate import generate_step
 
         except ImportError:
-            raise ImportError(
-                "Could not import mlx_lm python package. "
-                "Please install it with `pip install mlx_lm`."
-            )
+            raise ImportError("Could not import mlx_lm python package. Please install it with `pip install mlx_lm`.")
         model_kwargs = kwargs.get("model_kwargs", self.llm.pipeline_kwargs)
         temp: float = model_kwargs.get("temp", 0.0)
         max_new_tokens: int = model_kwargs.get("max_tokens", 100)
-        repetition_penalty: Optional[float] = model_kwargs.get(
-            "repetition_penalty", None
-        )
-        repetition_context_size: Optional[int] = model_kwargs.get(
-            "repetition_context_size", 20
-        )
+        repetition_penalty: Optional[float] = model_kwargs.get("repetition_penalty", None)
+        repetition_context_size: Optional[int] = model_kwargs.get("repetition_context_size", 20)
         top_p: float = model_kwargs.get("top_p", 1.0)
         min_p: float = model_kwargs.get("min_p", 0.0)
         min_tokens_to_keep: int = model_kwargs.get("min_tokens_to_keep", 1)
@@ -190,9 +172,7 @@ class ChatMLX(BaseChatModel):
 
         sampler = make_sampler(temp or 0.0, top_p, min_p, min_tokens_to_keep, top_k)
 
-        logits_processors = make_logits_processors(
-            None, repetition_penalty, repetition_context_size
-        )
+        logits_processors = make_logits_processors(None, repetition_penalty, repetition_context_size)
 
         for (token, prob), n in zip(
             generate_step(
@@ -248,10 +228,7 @@ class ChatMLX(BaseChatModel):
         formatted_tools = [convert_to_openai_tool(tool) for tool in tools]
         if tool_choice is not None and tool_choice:
             if len(formatted_tools) != 1:
-                raise ValueError(
-                    "When specifying `tool_choice`, you must provide exactly one "
-                    f"tool. Received {len(formatted_tools)} tools."
-                )
+                raise ValueError(f"When specifying `tool_choice`, you must provide exactly one tool. Received {len(formatted_tools)} tools.")
             if isinstance(tool_choice, str):
                 if tool_choice not in ("auto", "none"):
                     tool_choice = {
@@ -261,22 +238,13 @@ class ChatMLX(BaseChatModel):
             elif isinstance(tool_choice, bool):
                 tool_choice = formatted_tools[0]
             elif isinstance(tool_choice, dict):
-                if (
-                    formatted_tools[0]["function"]["name"]
-                    != tool_choice["function"]["name"]
-                ):
-                    raise ValueError(
-                        f"Tool choice {tool_choice} was specified, but the only "
-                        f"provided tool was {formatted_tools[0]['function']['name']}."
-                    )
+                if formatted_tools[0]["function"]["name"] != tool_choice["function"]["name"]:
+                    raise ValueError(f"Tool choice {tool_choice} was specified, but the only provided tool was {formatted_tools[0]['function']['name']}.")
             else:
-                raise ValueError(
-                    f"Unrecognized tool_choice type. Expected str, bool or dict. "
-                    f"Received: {tool_choice}"
-                )
+                raise ValueError(f"Unrecognized tool_choice type. Expected str, bool or dict. Received: {tool_choice}")
             kwargs["tool_choice"] = tool_choice
         return super().bind(tools=formatted_tools, **kwargs)
-    
+
     def _to_chat_prompt_thinking(
         self,
         messages: List[BaseMessage],
@@ -292,7 +260,7 @@ class ChatMLX(BaseChatModel):
             raise ValueError("Last message must be a HumanMessage!")
 
         messages_dicts = [self._to_chatml_format(m) for m in messages]
-        
+
         return self.tokenizer.apply_chat_template(
             messages_dicts,
             tokenize=tokenize,

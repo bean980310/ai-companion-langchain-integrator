@@ -1,4 +1,5 @@
-from .chat_models.mlx import ChatMLX
-from .llms.mlx_pipeline import MLXPipeline
+from ._version import __version__
+from langchain_mlx.chat_models import ChatMLX
+from langchain_mlx.llms import MLXPipeline
 
-__version__ = "0.0.1"
+__all__ = ["ChatMLX", "MLXPipeline", "__version__"]

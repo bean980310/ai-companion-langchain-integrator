@@ -1,1 +1,1 @@
-from .mlx_pipeline import MLXPipeline
+from .mlx_lm import MLXPipeline

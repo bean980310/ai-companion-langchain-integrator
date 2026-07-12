@@ -98,16 +98,11 @@ class MLXPipeline(LLM):
             from mlx_lm import load
 
         except ImportError:
-            raise ImportError(
-                "Could not import mlx_lm python package. "
-                "Please install it with `pip install mlx_lm`."
-            )
+            raise ImportError("Could not import mlx_lm python package. Please install it with `pip install mlx_lm`.")
 
         tokenizer_config = tokenizer_config or {}
         if adapter_file:
-            model, tokenizer = load(
-                model_id, tokenizer_config, adapter_path=adapter_file, lazy=lazy
-            )
+            model, tokenizer = load(model_id, tokenizer_config, adapter_path=adapter_file, lazy=lazy)
         else:
             model, tokenizer = load(model_id, tokenizer_config, lazy=lazy)
 
@@ -150,10 +145,7 @@ class MLXPipeline(LLM):
             from mlx_lm.sample_utils import make_logits_processors, make_sampler
 
         except ImportError:
-            raise ImportError(
-                "Could not import mlx_lm python package. "
-                "Please install it with `pip install mlx_lm`."
-            )
+            raise ImportError("Could not import mlx_lm python package. Please install it with `pip install mlx_lm`.")
 
         pipeline_kwargs = kwargs.get("pipeline_kwargs", self.pipeline_kwargs)
 
@@ -161,21 +153,15 @@ class MLXPipeline(LLM):
         max_tokens: int = pipeline_kwargs.get("max_tokens", 100)
         verbose: bool = pipeline_kwargs.get("verbose", False)
         formatter: Optional[Callable] = pipeline_kwargs.get("formatter", None)
-        repetition_penalty: Optional[float] = pipeline_kwargs.get(
-            "repetition_penalty", None
-        )
-        repetition_context_size: Optional[int] = pipeline_kwargs.get(
-            "repetition_context_size", 20
-        )
+        repetition_penalty: Optional[float] = pipeline_kwargs.get("repetition_penalty", None)
+        repetition_context_size: Optional[int] = pipeline_kwargs.get("repetition_context_size", 20)
         top_p: float = pipeline_kwargs.get("top_p", 1.0)
         min_p: float = pipeline_kwargs.get("min_p", 0.0)
         min_tokens_to_keep: int = pipeline_kwargs.get("min_tokens_to_keep", 1)
         top_k: int = pipeline_kwargs.get("top_k", 0)
 
         sampler = make_sampler(temp, top_p, min_p, min_tokens_to_keep, top_k)
-        logits_processors = make_logits_processors(
-            None, repetition_penalty, repetition_context_size
-        )
+        logits_processors = make_logits_processors(None, repetition_penalty, repetition_context_size)
 
         return generate(
             model=self.model,
@@ -186,7 +172,7 @@ class MLXPipeline(LLM):
             # formatter=formatter,
             sampler=sampler,
             logits_processors=logits_processors,
-            max_kv_size=2048
+            max_kv_size=2048,
         )
 
     def _stream(
@@ -202,21 +188,14 @@ class MLXPipeline(LLM):
             from mlx_lm.generate import generate_step
 
         except ImportError:
-            raise ImportError(
-                "Could not import mlx_lm python package. "
-                "Please install it with `pip install mlx_lm`."
-            )
+            raise ImportError("Could not import mlx_lm python package. Please install it with `pip install mlx_lm`.")
 
         pipeline_kwargs = kwargs.get("pipeline_kwargs", self.pipeline_kwargs)
 
         temp: float = pipeline_kwargs.get("temp", 0.0)
         max_new_tokens: int = pipeline_kwargs.get("max_tokens", 100)
-        repetition_penalty: Optional[float] = pipeline_kwargs.get(
-            "repetition_penalty", None
-        )
-        repetition_context_size: Optional[int] = pipeline_kwargs.get(
-            "repetition_context_size", 20
-        )
+        repetition_penalty: Optional[float] = pipeline_kwargs.get("repetition_penalty", None)
+        repetition_context_size: Optional[int] = pipeline_kwargs.get("repetition_context_size", 20)
         top_p: float = pipeline_kwargs.get("top_p", 1.0)
         min_p: float = pipeline_kwargs.get("min_p", 0.0)
         min_tokens_to_keep: int = pipeline_kwargs.get("min_tokens_to_keep", 1)
@@ -232,9 +211,7 @@ class MLXPipeline(LLM):
 
         sampler = make_sampler(temp or 0.0, top_p, min_p, min_tokens_to_keep, top_k)
 
-        logits_processors = make_logits_processors(
-            None, repetition_penalty, repetition_context_size
-        )
+        logits_processors = make_logits_processors(None, repetition_penalty, repetition_context_size)
 
         for (token, prob), n in zip(
             generate_step(
@@ -261,6 +238,7 @@ class MLXPipeline(LLM):
             # break if stop sequence found
             if token == eos_token_id or (stop is not None and text in stop):
                 break
+
 
 class MLXVisionPipeline(LLM):
     """MLX Pipeline API.
@@ -353,19 +331,14 @@ class MLXVisionPipeline(LLM):
             from mlx_vlm.utils import load_config
 
         except ImportError:
-            raise ImportError(
-                "Could not import mlx_lm python package. "
-                "Please install it with `pip install mlx_lm`."
-            )
+            raise ImportError("Could not import mlx_lm python package. Please install it with `pip install mlx_lm`.")
 
         tokenizer_config = tokenizer_config or {}
         if adapter_file:
-            model, tokenizer = load(
-                model_id, tokenizer_config, adapter_path=adapter_file, lazy=lazy
-            )
+            model, tokenizer = load(model_id, adapter_path=adapter_file, lazy=lazy)
             config = load_config(model_id)
         else:
-            model, tokenizer = load(model_id, tokenizer_config, lazy=lazy)
+            model, tokenizer = load(model_id, lazy=lazy)
             config = load_config(model_id)
 
         _pipeline_kwargs = pipeline_kwargs or {}
@@ -408,10 +381,7 @@ class MLXVisionPipeline(LLM):
             from mlx_vlm.sample_utils import make_logits_processors, make_sampler
 
         except ImportError:
-            raise ImportError(
-                "Could not import mlx_lm python package. "
-                "Please install it with `pip install mlx_lm`."
-            )
+            raise ImportError("Could not import mlx_lm python package. Please install it with `pip install mlx_lm`.")
 
         pipeline_kwargs = kwargs.get("pipeline_kwargs", self.pipeline_kwargs)
 
@@ -419,33 +389,26 @@ class MLXVisionPipeline(LLM):
         max_tokens: int = pipeline_kwargs.get("max_tokens", 100)
         verbose: bool = pipeline_kwargs.get("verbose", False)
         formatter: Optional[Callable] = pipeline_kwargs.get("formatter", None)
-        repetition_penalty: Optional[float] = pipeline_kwargs.get(
-            "repetition_penalty", None
-        )
-        repetition_context_size: Optional[int] = pipeline_kwargs.get(
-            "repetition_context_size", 20
-        )
+        repetition_penalty: Optional[float] = pipeline_kwargs.get("repetition_penalty", None)
+        repetition_context_size: Optional[int] = pipeline_kwargs.get("repetition_context_size", 20)
         top_p: float = pipeline_kwargs.get("top_p", 1.0)
         min_p: float = pipeline_kwargs.get("min_p", 0.0)
         min_tokens_to_keep: int = pipeline_kwargs.get("min_tokens_to_keep", 1)
         top_k: int = pipeline_kwargs.get("top_k", 0)
 
         sampler = make_sampler(temp, top_p, min_p, min_tokens_to_keep, top_k)
-        logits_processors = make_logits_processors(
-            None, repetition_penalty, repetition_context_size
-        )
+        logits_processors = make_logits_processors(None, repetition_penalty, repetition_context_size)
 
         return generate(
             model=self.model,
             processor=self.processor,
-            tokenizer=self.tokenizer,
             prompt=prompt,
             max_tokens=max_tokens,
             verbose=verbose,
             formatter=formatter,
             sampler=sampler,
             logits_processors=logits_processors,
-            max_kv_size=2048
+            max_kv_size=2048,
         )
 
     def _stream(
@@ -461,21 +424,14 @@ class MLXVisionPipeline(LLM):
             from mlx_vlm.generate import generate_step
 
         except ImportError:
-            raise ImportError(
-                "Could not import mlx_lm python package. "
-                "Please install it with `pip install mlx_lm`."
-            )
+            raise ImportError("Could not import mlx_lm python package. Please install it with `pip install mlx_lm`.")
 
         pipeline_kwargs = kwargs.get("pipeline_kwargs", self.pipeline_kwargs)
 
         temp: float = pipeline_kwargs.get("temp", 0.0)
         max_new_tokens: int = pipeline_kwargs.get("max_tokens", 100)
-        repetition_penalty: Optional[float] = pipeline_kwargs.get(
-            "repetition_penalty", None
-        )
-        repetition_context_size: Optional[int] = pipeline_kwargs.get(
-            "repetition_context_size", 20
-        )
+        repetition_penalty: Optional[float] = pipeline_kwargs.get("repetition_penalty", None)
+        repetition_context_size: Optional[int] = pipeline_kwargs.get("repetition_context_size", 20)
         top_p: float = pipeline_kwargs.get("top_p", 1.0)
         min_p: float = pipeline_kwargs.get("min_p", 0.0)
         min_tokens_to_keep: int = pipeline_kwargs.get("min_tokens_to_keep", 1)
@@ -491,13 +447,11 @@ class MLXVisionPipeline(LLM):
 
         sampler = make_sampler(temp or 0.0, top_p, min_p, min_tokens_to_keep, top_k)
 
-        logits_processors = make_logits_processors(
-            None, repetition_penalty, repetition_context_size
-        )
+        logits_processors = make_logits_processors(None, repetition_penalty, repetition_context_size)
 
         for (token, prob), n in zip(
             generate_step(
-                prompt=prompt_tokens,
+                input_ids=prompt_tokens,
                 model=self.model,
                 sampler=sampler,
                 logits_processors=logits_processors,

@@ -1,1 +1,1 @@
-from .mlx import ChatMLX
+from .mlx_lm import ChatMLX

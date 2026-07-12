@@ -1,3 +1,5 @@
+from accelerate.test_utils.scripts.external_deps.test_ds_alst_ulysses_sp import model
+import pydantic.v1
 import os
 import warnings
 import platform
@@ -11,21 +13,44 @@ try:
 
 except ImportError:
     if platform.system() == "Darwin" and platform.machine() == "arm64":
-        warnings.warn("langchain_mlx is not installed. Please install it to use MLX features.", UserWarning)
+        warnings.warn(
+            "langchain_mlx is not installed. Please install it to use MLX features.",
+            UserWarning,
+        )
     else:
         pass
 
 try:
-    from mlx_lm.tokenizer_utils import TokenizerWrapper, SPMStreamingDetokenizer, BPEStreamingDetokenizer, NaiveStreamingDetokenizer
+    from mlx_lm.tokenizer_utils import (
+        TokenizerWrapper,
+        SPMStreamingDetokenizer,
+        BPEStreamingDetokenizer,
+        NaiveStreamingDetokenizer,
+    )
 except ImportError:
     if platform.system() == "Darwin" and platform.machine() == "arm64":
-        warnings.warn("langchain_mlx is not installed. Please install it to use MLX features.", UserWarning)
+        warnings.warn(
+            "langchain_mlx is not installed. Please install it to use MLX features.",
+            UserWarning,
+        )
     else:
         pass
 
-from transformers import pipeline, PreTrainedModel, GenerationMixin, AutoModel, AutoModelForCausalLM, AutoModelForImageTextToText
+from transformers import (
+    pipeline,
+    PreTrainedModel,
+    GenerationMixin,
+    AutoModel,
+    AutoModelForCausalLM,
+    AutoModelForImageTextToText,
+)
 from transformers import AutoProcessor, ProcessorMixin
-from transformers import AutoTokenizer, PreTrainedTokenizerBase, TokenizersBackend, PythonBackend
+from transformers import (
+    AutoTokenizer,
+    PreTrainedTokenizerBase,
+    TokenizersBackend,
+    PythonBackend,
+)
 from peft import PeftModel
 from llama_cpp import Llama
 
@@ -33,39 +58,74 @@ from llama_cpp import Llama
 
 from langchain_core.globals import set_llm_cache, set_verbose, set_debug
 from langchain_core.caches import InMemoryCache
-from langchain_community.cache import RedisCache, SQLAlchemyCache, SQLiteCache, SQLAlchemyMd5Cache, GPTCache
+from langchain_redis import RedisCache
+from langchain_community.cache import (
+    SQLAlchemyCache,
+    SQLiteCache,
+    SQLAlchemyMd5Cache,
+    GPTCache,
+)
+
 
 from langchain.chat_models import init_chat_model
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM, BaseChatModel
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.output_parsers import StrOutputParser, BaseOutputParser, JsonOutputParser, XMLOutputParser, PydanticOutputParser, MarkdownListOutputParser
-from langchain_classic.output_parsers import RetryOutputParser, RetryWithErrorOutputParser
+from langchain_core.prompts import (
+    PromptTemplate,
+    ChatPromptTemplate,
+    MessagesPlaceholder,
+)
+from langchain_core.output_parsers import (
+    StrOutputParser,
+    BaseOutputParser,
+    JsonOutputParser,
+    XMLOutputParser,
+    PydanticOutputParser,
+    MarkdownListOutputParser,
+)
+from langchain_classic.output_parsers import (
+    RetryOutputParser,
+    RetryWithErrorOutputParser,
+)
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory, RunnableSerializable, Runnable, RunnableSequence
-from langchain_community.chat_message_histories import ChatMessageHistory, SQLChatMessageHistory
-from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.runnables import (
+    RunnableConfig,
+    RunnablePassthrough,
+    RunnableWithMessageHistory,
+    RunnableSerializable,
+    Runnable,
+    RunnableSequence,
+)
+from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # from langchain_classic.vectorstores import Chroma
 from langchain_chroma import Chroma
-from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import RecursiveUrlLoader
-from langchain_community.document_loaders import PyPDFLoader, PyMuPDFLoader, PDFPlumberLoader
+from langchain_community.document_loaders import (
+    PyPDFLoader,
+    PyMuPDFLoader,
+    PDFPlumberLoader,
+)
 from langchain_community.document_loaders import CSVLoader, UnstructuredCSVLoader
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_unstructured import UnstructuredLoader
 
 # Back‑end specific chat/LLM wrappers
-from langchain_community.llms.llamacpp import LlamaCpp
 
 try:
     from langchain_vllm.llms import VLLM
 except ImportError:
     warnings.warn("vllm is not installed. Please install it to use VLLM features.", UserWarning)
-from langchain_community.chat_models.llamacpp import ChatLlamaCpp
-from langchain_huggingface import HuggingFacePipeline, HuggingFaceEndpoint, ChatHuggingFace
+from langchain_llamacpp import LlamaCpp, ChatLlamaCpp, LlamaCppEmbeddings
+from langchain_huggingface import (
+    HuggingFacePipeline,
+    HuggingFaceEndpoint,
+    ChatHuggingFace,
+)
 from langchain_openai import ChatOpenAI
+from langchain_openrouter import ChatOpenRouter
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
@@ -77,7 +137,8 @@ from langchain_xai import ChatXAI  # xAI Grok
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, MessagesState, StateGraph
 
-from typing import Any, Generator, List, LiteralString, Literal
+from typing import Any, Generator, List, Literal
+from pydantic import SecretStr
 
 from mem0 import Memory
 
@@ -91,7 +152,10 @@ try:
     from langchain_mlx.chat_models import ChatMLX
 except ImportError:
     if platform.system() == "Darwin" and platform.machine() == "arm64":
-        warnings.warn("langchain_mlx is not installed. Please install it to use MLX features.", UserWarning)
+        warnings.warn(
+            "langchain_mlx is not installed. Please install it to use MLX features.",
+            UserWarning,
+        )
     else:
         pass
 
@@ -100,8 +164,8 @@ class LangchainIntegrator:
     def __init__(
         self,
         provider: str | tuple[str, str],
-        model_name: str = None,
-        lora_model_name: str = None,
+        model_name: str,
+        lora_model_name: str | None = None,
         model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None,
         tokenizer: AutoTokenizer | PythonBackend | TokenizersBackend | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None,
         processor: AutoProcessor | ProcessorMixin | Any | None = None,
@@ -151,7 +215,7 @@ class LangchainIntegrator:
         self.top_k = int(kwargs.get("top_k", 50))
         self.top_p = float(kwargs.get("top_p", 1.0))
         self.repetition_penalty = float(kwargs.get("repetition_penalty", 1.0))
-        self.tokenizer_config = kwargs.get("tokenizer_config", {})
+        self.tokenizer_config = dict(kwargs.get("tokenizer_config", {}))
         self.enable_thinking = bool(kwargs.get("enable_thinking", False))
 
         self.chunk_size = int(kwargs.get("chunk_size", 2048))
@@ -159,17 +223,17 @@ class LangchainIntegrator:
         self.tokenizer = tokenizer
         self.processor = processor
 
-        self.api_key = str(kwargs.get("api_key", None))
+        self.api_key: str | SecretStr | None = kwargs.get("api_key", None)
 
         self.n_gpu_layers = int(kwargs.get("n_gpu_layers", 1))
         self.verbose = bool(kwargs.get("verbose", True))
 
         # Lazily initialise attributes
-        self.prompt: ChatPromptTemplate = None
+        self.prompt: ChatPromptTemplate | None = None
         self.memory = Memory()
         self.user_message = None
-        self.chat_history: ChatMessageHistory = None
-        self.chain = None
+        self.chat_history: InMemoryChatMessageHistory | None = None
+        self.chain: RunnableSerializable[dict[str, Any], str] | Any | None = None
 
         # Build the chat/LLM instance based on provider
         self.chat: BaseChatModel | ChatHuggingFace | ChatLlamaCpp | ChatMLX | ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI | ChatPerplexity | ChatXAI = self._init_llm(self.provider, **kwargs)
@@ -190,12 +254,22 @@ class LangchainIntegrator:
                 frequency_penalty=self.repetition_penalty,
                 presence_penalty=self.repetition_penalty,
                 api_key=self.api_key,
-                max_output_tokens=self.max_tokens,
+                max_completion_tokens=self.max_tokens,
                 verbose=self.verbose,
                 reasoning={"effort": "medium"} if self.enable_thinking else {"effort": "none"},
+                use_responses_api=True,
             )
         elif provider == "anthropic":
-            return ChatAnthropic(model=self.model_name, temperature=self.temperature, top_p=self.top_p, top_k=self.top_k, api_key=self.api_key, max_tokens=self.max_tokens, verbose=self.verbose, thinking={"type": "enabled", "budget_tokens": 10000} if self.enable_thinking else {"type": "disabled"})
+            return ChatAnthropic(
+                model_name=self.model_name,
+                temperature=self.temperature,
+                top_p=self.top_p,
+                top_k=self.top_k,
+                api_key=self.api_key,
+                max_tokens_to_sample=self.max_tokens,
+                verbose=self.verbose,
+                thinking={"type": "enabled", "budget_tokens": 10000} if self.enable_thinking else {"type": "disabled"},
+            )
         elif provider == "google-genai":
             thinking_key = "thinking_level" if self.model_name == "gemini-3" else "thinking_budget"
 
@@ -212,7 +286,15 @@ class LangchainIntegrator:
                 api_key=self.api_key,
                 max_output_tokens=self.max_tokens,
                 verbose=self.verbose,
-                model_kwargs={"max_output_tokens": self.max_tokens, "temperature": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "frequency_penalty": self.repetition_penalty, "presence_penalty": self.repetition_penalty, thinking_key: thinking_value},
+                model_kwargs={
+                    "max_output_tokens": self.max_tokens,
+                    "temperature": self.temperature,
+                    "top_p": self.top_p,
+                    "top_k": self.top_k,
+                    "frequency_penalty": self.repetition_penalty,
+                    "presence_penalty": self.repetition_penalty,
+                    thinking_key: thinking_value,
+                },
             )
         elif provider == "perplexity":
             return ChatPerplexity(
@@ -241,14 +323,15 @@ class LangchainIntegrator:
                 verbose=self.verbose,
             )
         elif provider == "openrouter":
-            return ChatOpenAI(
+            return ChatOpenRouter(
                 model=self.model_name,
                 temperature=self.temperature,
                 api_key=self.api_key,
                 base_url="https://openrouter.ai/api/v1",
                 max_tokens=self.max_tokens,
+                max_completion_tokens=self.max_tokens,
                 top_p=self.top_p,
-                extra_body={
+                model_kwargs={
                     "top_k": self.top_k,
                     "repetition_penalty": self.repetition_penalty,
                 },
@@ -259,7 +342,7 @@ class LangchainIntegrator:
             hf_provider = self.model_name.split(":")[1] if self.model_name.split(":")[1] != "cheapest" or "fastest" else "auto"
 
             llm = HuggingFaceEndpoint(
-                repo_id=hf_model_name,
+                model=hf_model_name,
                 temperature=self.temperature,
                 huggingfacehub_api_token=self.api_key,
                 provider=hf_provider,
@@ -269,7 +352,12 @@ class LangchainIntegrator:
                 repetition_penalty=self.repetition_penalty,
                 verbose=self.verbose,
             )
-            return ChatHuggingFace(llm=llm, verbose=self.verbose, max_tokens=self.max_tokens, model_kwargs={})
+            return ChatHuggingFace(
+                llm=llm,
+                verbose=self.verbose,
+                max_tokens=self.max_tokens,
+                model_kwargs={},
+            )
         elif provider == "ollama":
             return ChatOllama(
                 model=self.model_name,
@@ -287,11 +375,11 @@ class LangchainIntegrator:
                 temperature=self.temperature,
                 api_key=self.api_key,
                 base_url="http://localhost:1234/v1",
-                max_tokens=self.max_tokens,
                 top_p=self.top_p,
                 extra_body={
+                    "max_tokens": self.max_tokens,
                     "top_k": self.top_k,
-                    "repetition_penalty": self.repetition_penalty,
+                    "repeat_penalty": self.repetition_penalty,
                 },
                 verbose=self.verbose,
             )
@@ -301,9 +389,9 @@ class LangchainIntegrator:
                 temperature=self.temperature,
                 api_key=self.api_key,
                 base_url="http://localhost:8000",
-                max_tokens=self.max_tokens,
                 top_p=self.top_p,
                 extra_body={
+                    "max_tokens": self.max_tokens,
                     "top_k": self.top_k,
                     "repetition_penalty": self.repetition_penalty,
                 },
@@ -312,10 +400,21 @@ class LangchainIntegrator:
         else:
             if provider == ("self-provided", "transformers"):
                 # Uses HuggingFace Inference Endpoint or Hub inference API
-                pipeline_kwargs = {"max_new_tokens": self.max_tokens, "temperature": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "repetition_penalty": self.repetition_penalty}
+                pipeline_kwargs = {
+                    "max_new_tokens": self.max_tokens,
+                    "temperature": self.temperature,
+                    "top_p": self.top_p,
+                    "top_k": self.top_k,
+                    "repetition_penalty": self.repetition_penalty,
+                }
                 pipe = pipeline(model=self.model, tokenizer=self.tokenizer, task="text-generation")
                 llm = HuggingFacePipeline(pipeline=pipe, pipeline_kwargs=pipeline_kwargs, verbose=self.verbose)
-                return ChatHuggingFace(llm=llm, verbose=self.verbose, max_tokens=self.max_tokens, model_kwargs={})
+                return ChatHuggingFace(
+                    llm=llm,
+                    verbose=self.verbose,
+                    max_tokens=self.max_tokens,
+                    model_kwargs={},
+                )
             elif provider == ("self-provided", "vllm-local"):
                 return VLLM(
                     model=self.model,
@@ -344,8 +443,19 @@ class LangchainIntegrator:
                 )
             elif provider == ("self-provided", "mlx"):
                 # apple/mlx backend via llama.cpp; requires backend='mlx'
-                pipeline_kwargs = {"max_tokens": self.max_tokens, "temp": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "repetition_penalty": self.repetition_penalty}
-                llm = MLXPipeline.from_model_id(model_id=self.model_name, adapter_file=self.lora_model_name, pipeline_kwargs=pipeline_kwargs, tokenizer_config=self.tokenizer_config)
+                pipeline_kwargs = {
+                    "max_tokens": self.max_tokens,
+                    "temp": self.temperature,
+                    "top_p": self.top_p,
+                    "top_k": self.top_k,
+                    "repetition_penalty": self.repetition_penalty,
+                }
+                llm = MLXPipeline.from_model_id(
+                    model_id=self.model_name,
+                    adapter_file=self.lora_model_name,
+                    pipeline_kwargs=pipeline_kwargs,
+                    tokenizer_config=self.tokenizer_config,
+                )
                 return ChatMLX(llm=llm, verbose=self.verbose)
             else:
                 raise ValueError(f"Unsupported backend type: {provider}")
@@ -371,7 +481,10 @@ class LangchainIntegrator:
         self.load_template_with_langchain(history)
         if any(n in ["transformers", "mlx"] for n in self.provider.lower()):
             if "qwen3" in self.model_name.lower() and "instruct" not in self.model_name.lower() and "thinking" not in self.model_name.lower():
-                self.chat._to_chat_prompt_thinking(messages=[history, self.user_message], enable_thinking=self.enable_thinking)
+                self.chat._to_chat_prompt_thinking(
+                    messages=[history, self.user_message],
+                    enable_thinking=self.enable_thinking,
+                )
             else:
                 self.chat._to_chat_prompt(messages=[history, self.user_message])
         self.chain = self.prompt | self.chat | StrOutputParser()
@@ -385,7 +498,12 @@ class LangchainIntegrator:
             #     response += "".join(chunks[i])
             response = self.chain.invoke({"input": self.user_message.content})
         else:
-            chain_with_history = RunnableWithMessageHistory(self.chain, lambda session_id: self.chat_history, input_messages_key="input", history_messages_key="chat_history")
+            chain_with_history = RunnableWithMessageHistory(
+                self.chain,
+                lambda session_id: self.chat_history,
+                input_messages_key="input",
+                history_messages_key="chat_history",
+            )
             # chunks = []
             # response = ""
             # for chunk in chain_with_history.stream({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}}):
@@ -393,7 +511,10 @@ class LangchainIntegrator:
             #     print(chunk, end="", flush=True)
             # for i in range(len(chunks)):
             #     response += "".join(chunks[i])
-            response = chain_with_history.invoke({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}})
+            response = chain_with_history.invoke(
+                {"input": self.user_message.content},
+                {"configurable": {"session_id": "unused"}},
+            )
 
         if "</think>" in response:
             _, response = response.split("</think>", 1)
@@ -421,7 +542,7 @@ class LangchainIntegrator:
         return str(content)
 
     def load_template_with_langchain(self, messages):
-        self.chat_history = ChatMessageHistory()
+        self.chat_history = InMemoryChatMessageHistory()
         # system_prompt = next((msg['content'] for msg in messages[:1] if msg['role'] == 'system'), None)
         system_message = None
 
@@ -444,9 +565,16 @@ class LangchainIntegrator:
 
         # logger.info(len(self.chat_history.messages))
         if not self.chat_history.messages:
-            self.prompt = ChatPromptTemplate.from_messages([("system", system_message.content), ("user", "{input}")])
+            self.prompt = ChatPromptTemplate.from_messages([
+                ("system", system_message.content),
+                ("user", "{input}"),
+            ])
         else:
-            self.prompt = ChatPromptTemplate.from_messages([("system", system_message.content), MessagesPlaceholder(variable_name="chat_history"), ("user", "{input}")])
+            self.prompt = ChatPromptTemplate.from_messages([
+                ("system", system_message.content),
+                MessagesPlaceholder(variable_name="chat_history"),
+                ("user", "{input}"),
+            ])
 
     @staticmethod
     def process_doc(src: str | Path | List[str] | List[Path]):
