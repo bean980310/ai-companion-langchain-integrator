@@ -1,21 +1,6 @@
-import os
-import json
 import logging
-from datetime import datetime
-from typing import Any
-from abc import abstractmethod
 
-import httpx
-from mcp.server import Server
-from mcp.types import (
-    Resource,
-    Tool,
-    TextContent,
-    ImageContent,
-    EmbeddedResource
-)
 
-from pydantic import AnyUrl
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("weather-server")

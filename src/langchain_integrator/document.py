@@ -1,6 +1,5 @@
-from dataclasses import dataclass
 from pathlib import Path
-from typing import IO, Optional
+from typing import Optional
 
 from langchain_unstructured import UnstructuredLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
